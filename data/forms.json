@@ -1,0 +1,28 @@
+[
+  {
+    "title": "Test Form",
+    "description": "A form to test everything",
+    "fieldsCount": 5,
+    "status": "active",
+    "id": 1,
+    "updatedAt": "2026-02-18T13:02:29.823Z"
+  },
+  {
+    "title": "New Form",
+    "description": "Test",
+    "fieldsCount": 49,
+    "status": "draft",
+    "id": 2,
+    "createdAt": "2026-02-18T13:02:49.304Z",
+    "updatedAt": "2026-02-18T13:03:05.748Z"
+  },
+  {
+    "title": "Old form",
+    "description": "Test ",
+    "fieldsCount": 22,
+    "status": "archived",
+    "id": 3,
+    "createdAt": "2026-02-18T13:03:00.031Z",
+    "updatedAt": "2026-02-18T13:03:00.031Z"
+  }
+]
