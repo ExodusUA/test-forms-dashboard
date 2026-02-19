@@ -8,6 +8,14 @@ import { useRouter } from 'next/navigation';
 import { Save, Trash2 } from 'lucide-react';
 import { useToastStore } from '@/lib/store/toast';
 import { Button } from '@/components/ui/button';
+import { FormField } from '@/components/ui/form-field';
+import { ErrorMessage } from '@/components/ui/error-message';
+
+const statusOptions = [
+    { value: 'draft', label: 'Draft' },
+    { value: 'active', label: 'Active' },
+    { value: 'archived', label: 'Archived' },
+] as const;
 
 interface EditFormFormProps {
     form: Form;
@@ -37,33 +45,32 @@ export function EditFormForm({ form }: EditFormFormProps) {
         try {
             const response = await fetch(`/api/forms/${form.id}`, {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data),
             });
 
             const result = await response.json();
 
             if (!response.ok || !result.success) {
-                setApiError(result.error || 'Failed to update form');
+                setApiError(result.error || 'Update failed');
+                addToast(result.error || 'Could not save changes', 'error');
                 return;
             }
 
-            addToast('Form updated successfully!', 'success');
-
-            await router.push('/forms');
+            addToast('Changes saved', 'success');
+            router.push('/forms');
             router.refresh();
         } catch {
-            setApiError('Network error. Please try again.');
-            addToast('Network error. Please try again.', 'error');
+            const message = 'Failed to update form';
+            setApiError(message);
+            addToast(message, 'error');
         } finally {
             setIsLoading(false);
         }
     };
 
     const onDelete = async () => {
-        if (!confirm('Are you sure you want to delete this form? This action cannot be undone.')) {
+        if (!confirm('Delete this form? This cannot be undone.')) {
             return;
         }
 
@@ -78,18 +85,18 @@ export function EditFormForm({ form }: EditFormFormProps) {
             const result = await response.json();
 
             if (!response.ok || !result.success) {
-                setApiError(result.error || 'Failed to delete form');
+                setApiError(result.error || 'Could not delete form');
+                addToast('Deletion failed', 'error');
                 return;
             }
 
-            addToast('Form deleted successfully!', 'success');
-
-            // Navigate first, then refresh will happen automatically
-            await router.push('/forms');
+            addToast('Form deleted', 'success');
+            router.push('/forms');
             router.refresh();
         } catch {
-            setApiError('Network error. Please try again.');
-            addToast('Network error. Please try again.', 'error');
+            const msg = 'Something went wrong';
+            setApiError(msg);
+            addToast(msg, 'error');
         } finally {
             setIsDeleting(false);
         }
@@ -98,89 +105,63 @@ export function EditFormForm({ form }: EditFormFormProps) {
     return (
         <div className="space-y-6">
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                <ErrorMessage message={apiError} />
 
-                {apiError && (
-                    <div className="p-3 border border-red-800 rounded-md bg-red-900/50">
-                        <p className="text-sm text-red-200">{apiError}</p>
-                    </div>
-                )}
+                <FormField
+                    fieldType="input"
+                    label="Title"
+                    required
+                    error={errors.title?.message}
+                    disabled={isLoading || isDeleting}
+                    inputProps={{
+                        id: 'title',
+                        placeholder: 'e.g. Customer Feedback Form',
+                        ...register('title')
+                    }}
+                />
 
-                <div>
-                    <label htmlFor="title" className="block mb-2 text-sm font-medium text-gray-200">
-                        Title <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                        type="text"
-                        id="title"
-                        {...register('title')}
-                        className={`block w-full rounded-md border ${errors.title ? 'border-red-500' : 'border-gray-700'
-                            } bg-gray-800 text-white px-3 py-2 shadow-sm focus:border-brand-orange focus:ring-1 focus:ring-brand-orange focus:outline-none`}
-                        placeholder="e.g. Customer Feedback Form"
-                        disabled={isLoading || isDeleting}
-                    />
-                    {errors.title && (
-                        <p className="mt-1 text-sm text-red-400">{errors.title.message}</p>
-                    )}
-                </div>
-
-                <div>
-                    <label htmlFor="description" className="block mb-2 text-sm font-medium text-gray-200">
-                        Description <span className="text-gray-500">(optional)</span>
-                    </label>
-                    <textarea
-                        id="description"
-                        rows={4}
-                        {...register('description')}
-                        className={`block w-full rounded-md border ${errors.description ? 'border-red-500' : 'border-gray-700'
-                            } bg-gray-800 text-white px-3 py-2 shadow-sm focus:border-brand-orange focus:ring-1 focus:ring-brand-orange focus:outline-none`}
-                        placeholder="Describe the purpose of this form..."
-                        disabled={isLoading || isDeleting}
-                    />
-                    {errors.description && (
-                        <p className="mt-1 text-sm text-red-400">{errors.description.message}</p>
-                    )}
-                </div>
+                <FormField
+                    fieldType="textarea"
+                    label="Description"
+                    error={errors.description?.message}
+                    disabled={isLoading || isDeleting}
+                    textareaProps={{
+                        id: 'description',
+                        rows: 5,
+                        ...register('description')
+                    }}
+                />
 
                 <div>
-                    <label htmlFor="fieldsCount" className="block mb-2 text-sm font-medium text-gray-200">
-                        Number of Fields <span className="text-red-500">*</span>
-                    </label>
-                    <input
+                    <FormField
+                        fieldType="input"
                         type="number"
-                        id="fieldsCount"
-                        {...register('fieldsCount', { valueAsNumber: true })}
-                        className={`block w-full rounded-md border ${errors.fieldsCount ? 'border-red-500' : 'border-gray-700'
-                            } bg-gray-800 text-white px-3 py-2 shadow-sm focus:border-brand-orange focus:ring-1 focus:ring-brand-orange focus:outline-none`}
-                        placeholder="0"
-                        min="0"
-                        max="50"
+                        label="Number of fields"
+                        required
+                        error={errors.fieldsCount?.message}
                         disabled={isLoading || isDeleting}
+                        inputProps={{
+                            id: 'fieldsCount',
+                            min: 0,
+                            max: 50,
+                            ...register('fieldsCount', { valueAsNumber: true })
+                        }}
                     />
-                    <p className="mt-1 text-xs text-gray-500">Must be between 0 and 50</p>
-                    {errors.fieldsCount && (
-                        <p className="mt-1 text-sm text-red-400">{errors.fieldsCount.message}</p>
-                    )}
+                    <p className="mt-1 text-xs text-gray-400">Between 0 and 50</p>
                 </div>
 
-                <div>
-                    <label htmlFor="status" className="block mb-2 text-sm font-medium text-gray-200">
-                        Status <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                        id="status"
-                        {...register('status')}
-                        className={`block w-full rounded-md border ${errors.status ? 'border-red-500' : 'border-gray-700'
-                            } bg-gray-800 text-white px-3 py-2 shadow-sm focus:border-brand-orange focus:ring-1 focus:ring-brand-orange focus:outline-none`}
-                        disabled={isLoading || isDeleting}
-                    >
-                        <option value="draft">Draft</option>
-                        <option value="active">Active</option>
-                        <option value="archived">Archived</option>
-                    </select>
-                    {errors.status && (
-                        <p className="mt-1 text-sm text-red-400">{errors.status.message}</p>
-                    )}
-                </div>
+                <FormField
+                    fieldType="select"
+                    label="Status"
+                    required
+                    error={errors.status?.message}
+                    disabled={isLoading || isDeleting}
+                    options={statusOptions}
+                    selectProps={{
+                        id: 'status',
+                        ...register('status')
+                    }}
+                />
 
                 <div className="pt-4 border-t border-gray-800">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

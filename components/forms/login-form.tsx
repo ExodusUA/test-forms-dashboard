@@ -7,6 +7,8 @@ import { useState } from 'react';
 import { useAuthStore } from '@/lib/store/auth';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { FormField } from '@/components/ui/form-field';
+import { ErrorMessage } from '@/components/ui/error-message';
 
 const roles = [
     { value: 'individual', label: 'Individual' },
@@ -59,51 +61,32 @@ export default function LoginForm() {
 
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="w-full max-w-md mt-8 space-y-6">
-            {apiError && (
-                <div className="p-3 border border-red-800 rounded-md bg-red-900/50">
-                    <p className="text-sm text-red-200">{apiError}</p>
-                </div>
-            )}
+            <ErrorMessage message={apiError} />
 
-            <div>
-                <label htmlFor="email" className="block mb-2 text-sm font-medium text-gray-200">
-                    Email
-                </label>
-                <input
-                    type="email"
-                    id="email"
-                    {...register('email')}
-                    className={`block w-full rounded-md border ${errors.email ? 'border-red-500' : 'border-gray-700'
-                        } bg-gray-800 text-white px-3 py-2 shadow-sm focus:border-brand-orange focus:ring-1 focus:ring-brand-orange focus:outline-none`}
-                    placeholder="you@example.com"
-                    disabled={isLoading}
-                />
-                {errors.email && (
-                    <p className="mt-1 text-sm text-red-400">{errors.email.message}</p>
-                )}
-            </div>
+            <FormField
+                fieldType="input"
+                type="email"
+                label="Email"
+                error={errors.email?.message}
+                disabled={isLoading}
+                inputProps={{
+                    id: 'email',
+                    placeholder: 'you@example.com',
+                    ...register('email')
+                }}
+            />
 
-            <div>
-                <label htmlFor="role" className="block mb-2 text-sm font-medium text-gray-200">
-                    Role
-                </label>
-                <select
-                    id="role"
-                    {...register('role')}
-                    className={`block w-full rounded-md border ${errors.role ? 'border-red-500' : 'border-gray-700'
-                        } bg-gray-800 text-white px-3 py-2 shadow-sm focus:border-brand-orange focus:ring-1 focus:ring-brand-orange focus:outline-none`}
-                    disabled={isLoading}
-                >
-                    {roles.map((role) => (
-                        <option key={role.value} value={role.value}>
-                            {role.label}
-                        </option>
-                    ))}
-                </select>
-                {errors.role && (
-                    <p className="mt-1 text-sm text-red-400">{errors.role.message}</p>
-                )}
-            </div>
+            <FormField
+                fieldType="select"
+                label="Role"
+                error={errors.role?.message}
+                disabled={isLoading}
+                options={roles}
+                selectProps={{
+                    id: 'role',
+                    ...register('role')
+                }}
+            />
 
             <Button
                 type="submit"
